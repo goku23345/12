@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050608">
+  <meta name="description" content="AERIS ONE 沉浸式空间音频体验——三层视差与精密交互演示。">
+  <title>AERIS ONE — 聆听空间本身</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,300;6..72,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --ink: #f4f5f2;
+      --muted: #a7abb2;
+      --night: #050608;
+      --night-soft: #0b0d11;
+      --accent: #92e7ff;
+      --accent-rgb: 146, 231, 255;
+      --warm: #dac8b2;
+      --curve: cubic-bezier(.32,.72,0,1);
+      --safe-top: max(20px, env(safe-area-inset-top));
+      --safe-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+
+    * { box-sizing: border-box; }
+    html { background: var(--night); scroll-behavior: auto; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: clip;
+      background: var(--night);
+      color: var(--ink);
+      font-family: "Manrope", "Segoe UI Variable", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+      overscroll-behavior-y: none;
+    }
+    body.menu-open { overflow: hidden; }
+    a, button { color: inherit; }
+    button { font: inherit; }
+    img, svg { display: block; max-width: 100%; }
+    ::selection { background: rgba(var(--accent-rgb), .28); color: #fff; }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+
+    .skip-link {
+      position: fixed; left: 18px; top: 18px; z-index: 50;
+      transform: translateY(-180%); padding: 12px 18px; border-radius: 999px;
+      background: var(--ink); color: var(--night); transition: transform .45s var(--curve);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .noise {
+      position: fixed; inset: 0; z-index: 40; pointer-events: none; opacity: .028;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.85'/%3E%3C/svg%3E");
+    }
+    .cursor-aura {
+      position: fixed; z-index: 0; left: -110px; top: -110px; width: 220px; height: 220px;
+      pointer-events: none; border-radius: 50%; opacity: 0;
+      background: radial-gradient(circle, rgba(var(--accent-rgb), .13), transparent 68%);
+      will-change: transform, opacity;
+    }
+
+    .nav-shell {
+      position: fixed; z-index: 30; top: var(--safe-top); left: 50%; transform: translateX(-50%);
+      width: min(690px, calc(100% - 32px)); padding: 5px; border-radius: 999px;
+      background: rgba(255,255,255,.055); box-shadow: 0 18px 65px rgba(0,0,0,.18);
+      backdrop-filter: blur(22px) saturate(135%); -webkit-backdrop-filter: blur(22px) saturate(135%);
+    }
+    .nav-core {
+      min-height: 54px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 8px 0 18px; border-radius: 999px; background: rgba(5,6,8,.74);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.11);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; letter-spacing: -.04em; }
+    .brand-mark { width: 18px; height: 18px; color: var(--accent); }
+    .nav-meta { color: var(--muted); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+    .menu-button {
+      width: 42px; height: 42px; display: grid; place-items: center; border: 0; border-radius: 50%;
+      background: rgba(255,255,255,.075); cursor: pointer; transition: transform .65s var(--curve), background .65s var(--curve);
+    }
+    .menu-button:hover { transform: scale(1.06); background: rgba(255,255,255,.13); }
+    .menu-icon { width: 16px; height: 12px; position: relative; }
+    .menu-icon i { position: absolute; left: 0; width: 16px; height: 1px; background: currentColor; transition: transform .7s var(--curve), top .7s var(--curve); }
+    .menu-icon i:first-child { top: 3px; }
+    .menu-icon i:last-child { top: 9px; }
+    .menu-open .menu-icon i:first-child { top: 6px; transform: rotate(45deg); }
+    .menu-open .menu-icon i:last-child { top: 6px; transform: rotate(-45deg); }
+
+    .menu-overlay {
+      position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; visibility: hidden; opacity: 0;
+      background: rgba(5,6,8,.82); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
+      transition: opacity .7s var(--curve), visibility .7s;
+    }
+    .menu-open .menu-overlay { visibility: visible; opacity: 1; }
+    .menu-list { display: grid; gap: 8px; text-align: center; }
+    .menu-list a {
+      overflow: hidden; color: var(--ink); font-family: "Newsreader", Georgia, serif;
+      font-size: clamp(42px, 7vw, 92px); line-height: .95; text-decoration: none;
+    }
+    .menu-list a span { display: block; transform: translateY(115%); opacity: 0; transition: transform .9s var(--curve), opacity .7s var(--curve); }
+    .menu-open .menu-list a span { transform: translateY(0); opacity: 1; }
+    .menu-open .menu-list a:nth-child(2) span { transition-delay: .06s; }
+    .menu-open .menu-list a:nth-child(3) span { transition-delay: .12s; }
+    .menu-open .menu-list a:nth-child(4) span { transition-delay: .18s; }
+
+    .motion-toggle {
+      position: fixed; right: 18px; bottom: var(--safe-bottom); z-index: 25;
+      display: inline-flex; align-items: center; gap: 9px; padding: 10px 14px; border: 0; border-radius: 999px;
+      color: rgba(255,255,255,.74); background: rgba(12,14,18,.72); cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.1), 0 10px 40px rgba(0,0,0,.16);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .motion-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 18px rgba(var(--accent-rgb), .8); }
+    .motion-toggle[aria-pressed="false"] .motion-dot { background: #777b81; box-shadow: none; }
+
+    .progress-rail {
+      position: fixed; z-index: 15; left: 22px; top: 50%; transform: translateY(-50%);
+      display: grid; gap: 13px;
+    }
+    .progress-rail a { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.24); transition: transform .5s var(--curve), background .5s var(--curve); }
+    .progress-rail a.active { transform: scale(1.8); background: var(--accent); }
+
+    main { position: relative; z-index: 1; }
+    .scene {
+      position: relative; min-height: 115vh; min-height: 115svh; overflow: clip;
+      display: grid; align-items: center; isolation: isolate;
+    }
+    .layer { position: absolute; inset: -12%; will-change: transform; }
+    .layer-bg { z-index: -2; }
+    .layer-visual { z-index: -1; display: grid; place-items: center; pointer-events: none; }
+    .layer-copy { position: relative; z-index: 2; width: min(1280px, calc(100% - 96px)); margin: 0 auto; }
+
+    .aurora {
+      background:
+        radial-gradient(ellipse 48% 48% at 72% 44%, rgba(var(--accent-rgb), .19), transparent 67%),
+        radial-gradient(ellipse 34% 38% at 20% 68%, rgba(107,87,255,.12), transparent 72%),
+        linear-gradient(180deg, #050608, #080b10 56%, #050608);
+    }
+    .grid-plane {
+      position: absolute; width: 76vw; height: 76vw; max-width: 1100px; max-height: 1100px;
+      right: -18vw; top: 12%; opacity: .16; border-radius: 50%; transform: rotate(18deg);
+      background-image: linear-gradient(rgba(255,255,255,.09) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.09) 1px, transparent 1px);
+      background-size: 64px 64px; mask-image: radial-gradient(circle, #000 18%, transparent 68%);
+    }
+    .orbit { position: absolute; border: 1px solid rgba(255,255,255,.09); border-radius: 50%; }
+    .orbit-a { width: 48vw; height: 48vw; right: 7vw; top: 18%; }
+    .orbit-b { width: 35vw; height: 35vw; right: 13.5vw; top: calc(18% + 6.5vw); border-color: rgba(var(--accent-rgb), .16); }
+    .orbit-dot { width: 8px; height: 8px; right: 19%; top: 24%; background: var(--accent); box-shadow: 0 0 32px rgba(var(--accent-rgb), .9); border: 0; }
+
+    .hero { min-height: 108vh; min-height: 108svh; }
+    .hero-copy { padding-top: 9vh; }
+    .hero .hero-copy { pointer-events: none; }
+    .hero .hero-copy a, .hero .hero-copy button { pointer-events: auto; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; margin-bottom: 24px; color: rgba(255,255,255,.64); font-size: 10px; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 23px; height: 1px; background: var(--accent); }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      max-width: 860px; margin-bottom: 32px; font-size: clamp(64px, 10vw, 148px); line-height: .82;
+      letter-spacing: -.075em; font-weight: 520;
+    }
+    h1 em { display: block; color: var(--accent); font-family: "Newsreader", Georgia, serif; font-weight: 300; }
+    .hero-intro { max-width: 450px; margin-left: 8vw; color: var(--muted); font-size: clamp(16px, 1.4vw, 21px); line-height: 1.65; }
+    .hero-actions { margin: 34px 0 0 8vw; display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .button {
+      display: inline-flex; align-items: center; gap: 15px; padding: 7px 7px 7px 22px; border: 0; border-radius: 999px;
+      text-decoration: none; cursor: pointer; background: var(--ink); color: var(--night); font-size: 13px; font-weight: 650;
+      box-shadow: 0 20px 50px rgba(0,0,0,.16); transition: transform .7s var(--curve), background .7s var(--curve);
+    }
+    .button:active { transform: scale(.98); }
+    .button-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; background: rgba(0,0,0,.075); transition: transform .7s var(--curve); }
+    .button:hover .button-icon { transform: translate(3px,-1px) scale(1.06); }
+    .button-ghost { background: rgba(255,255,255,.075); color: var(--ink); box-shadow: inset 0 1px 0 rgba(255,255,255,.1); }
+    .button-ghost .button-icon { background: rgba(255,255,255,.08); }
+
+    .model-cluster {
+      position: absolute; right: 15vw; top: 16vh; width: min(48vw, 720px); height: min(68vh, 640px);
+      transform: rotate(-1deg); pointer-events: auto; will-change: transform, opacity;
+    }
+    .model-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+    .model-layer .model-cluster { right: 3vw; top: 13svh; width: 42vw; height: 76svh; transform: none; pointer-events: auto; }
+    #model-webgl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    #model-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: transparent; pointer-events: none; }
+    .model-gesture { position: absolute; inset: 0; touch-action: pan-y; cursor: grab; }
+    .model-gesture:active { cursor: grabbing; }
+    .model-canvas { touch-action: pan-y !important; }
+    .model-layer .model-badge { top: 0; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; }
+    .model-layer .model-tools { bottom: 0; left: 0; right: 0; gap: 8px; }
+    .model-layer .model-credit { bottom: -25px; left: 0; right: 0; text-align: center; font-size: 10px; }
+    .model-layer .model-hotspot { display: none; }
+    .model-layer .model-insight { top: 45px; width: 230px; }
+    .view-button:disabled, .depth-control input:disabled { opacity: .35; cursor: wait; }
+    .model-layer .model-fallback { z-index: 5; pointer-events: none; text-align: center; line-height: 1.8; }
+    @media (max-width: 767px) {
+      .hero { min-height: 1250px !important; }
+      .model-layer .model-cluster { top: 630px; left: 4vw; right: auto; width: 92vw; height: 500px; opacity: 1; transform: none; }
+      .model-layer .model-tools { display: flex; }
+      .model-layer .model-credit { display: block; }
+    }
+    .model-shell {
+      position: relative; width: 100%; height: 100%;
+    }
+    .model-core { position: relative; width: 100%; height: 100%; overflow: visible; }
+    .model-canvas { position: absolute; inset: 0; display: grid; place-items: center; perspective: 1100px; cursor: grab; touch-action: none; user-select: none; }
+    .model-canvas:active { cursor: grabbing; }
+    .model-canvas::before { content: ""; position: absolute; width: 62%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, rgba(var(--accent-rgb),.19), transparent 65%); transform: translateY(8%); }
+    .model-object { position: relative; width: min(100%, 720px); transform-style: preserve-3d; will-change: transform; }
+    .model-render { width: 100%; height: auto; pointer-events: none; filter: drop-shadow(0 48px 42px rgba(0,0,0,.72)); }
+    .model-fallback { position: absolute; inset: 0; display: grid; place-items: center; color: rgba(255,255,255,.42); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; }
+    .model-ready .model-fallback { opacity: 0; }
+    .model-badge { position: absolute; top: 18px; left: 18px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 999px; background: rgba(5,6,8,.68); color: rgba(255,255,255,.72); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .model-badge i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 14px rgba(var(--accent-rgb),.8); }
+    .model-tools { position: absolute; z-index: 2; left: 18px; right: 18px; bottom: 18px; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; pointer-events: none; }
+    .view-switcher { display: flex; gap: 5px; padding: 5px; border-radius: 999px; background: rgba(5,6,8,.72); backdrop-filter: blur(13px); -webkit-backdrop-filter: blur(13px); pointer-events: auto; }
+    .view-button { border: 0; border-radius: 999px; padding: 9px 13px; background: transparent; color: rgba(255,255,255,.62); font-size: 10px; cursor: pointer; transition: color .55s var(--curve), background .55s var(--curve), transform .55s var(--curve); }
+    .view-button:hover, .view-button.active { color: #fff; background: rgba(255,255,255,.1); }
+    .view-button:active { transform: scale(.94); }
+    .depth-control { width: 140px; padding: 11px 13px; border-radius: 18px; background: rgba(5,6,8,.72); backdrop-filter: blur(13px); -webkit-backdrop-filter: blur(13px); pointer-events: auto; }
+    .depth-label { display: flex; justify-content: space-between; margin-bottom: 8px; color: rgba(255,255,255,.58); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; }
+    .depth-control input { width: 100%; height: 2px; margin: 0; appearance: none; background: rgba(255,255,255,.22); accent-color: var(--accent); cursor: pointer; }
+    .depth-control input::-webkit-slider-thumb { appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 16px rgba(var(--accent-rgb),.55); }
+    .model-hotspot { position: absolute; z-index: 3; width: 30px; height: 30px; border: 0; border-radius: 50%; color: #fff; background: rgba(5,6,8,.7); box-shadow: 0 0 0 1px rgba(var(--accent-rgb),.5), 0 0 28px rgba(var(--accent-rgb),.22); cursor: pointer; opacity: 0; transform: scale(.65); transition: opacity .7s var(--curve), transform .7s var(--curve), background .5s var(--curve); }
+    .model-ready .model-hotspot { opacity: 1; transform: scale(1); }
+    .model-hotspot::after { content: ""; position: absolute; inset: 11px; border-radius: 50%; background: var(--accent); }
+    .model-hotspot:hover, .model-hotspot.active { transform: scale(1.14); background: rgba(var(--accent-rgb),.24); }
+    .hotspot-a { left: 56%; top: 45%; } .hotspot-b { right: 9%; top: 48%; } .hotspot-c { right: 23%; top: 17%; }
+    .model-insight { position: absolute; z-index: 4; right: 20px; top: 20px; width: min(260px, 46%); padding: 18px; border-radius: 22px; background: rgba(5,6,8,.83); box-shadow: inset 0 1px 0 rgba(255,255,255,.12); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); opacity: 0; transform: translateY(-12px); pointer-events: none; transition: opacity .65s var(--curve), transform .65s var(--curve); }
+    .model-insight.visible { opacity: 1; transform: translateY(0); }
+    .model-insight strong { display: block; margin-bottom: 7px; font-size: 13px; }
+    .model-insight span { color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .model-credit { position: absolute; right: 18px; bottom: -4px; color: rgba(255,255,255,.35); font-size: 9px; letter-spacing: .06em; text-decoration: none; }
+    .model-credit:hover { color: var(--accent); }
+
+    .section-copy { max-width: 650px; }
+    .section-copy.right { margin-left: auto; }
+    .display {
+      margin-bottom: 26px; font-size: clamp(52px, 7.5vw, 112px); line-height: .9; letter-spacing: -.065em; font-weight: 520;
+    }
+    .display .serif { font-family: "Newsreader", Georgia, serif; font-weight: 300; color: var(--accent); }
+    .lede { max-width: 530px; color: var(--muted); font-size: clamp(16px, 1.5vw, 22px); line-height: 1.65; }
+    .micro-stat { display: flex; gap: 42px; margin-top: 42px; }
+    .micro-stat strong { display: block; font-size: clamp(28px, 3.5vw, 52px); letter-spacing: -.055em; }
+    .micro-stat span { color: var(--muted); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; }
+
+    .wave-bg { background: radial-gradient(circle at 40% 50%, rgba(var(--accent-rgb), .13), transparent 42%), #060709; }
+    .waveform { width: min(92vw, 1280px); opacity: .7; }
+    .waveform path { vector-effect: non-scaling-stroke; }
+    .wave-core { stroke: var(--accent); filter: drop-shadow(0 0 12px rgba(var(--accent-rgb), .4)); }
+
+    .material-bg { background: linear-gradient(135deg, #101113, #070809 55%, #17130f); }
+    .material-disc {
+      width: min(46vw, 650px); aspect-ratio: 1; border-radius: 50%; transform: translateX(-25vw);
+      background: radial-gradient(circle at 38% 32%, #f5ede3 0, #978b7f 7%, #252525 28%, #08090a 62%);
+      box-shadow: inset -35px -44px 80px rgba(0,0,0,.7), 0 70px 110px rgba(0,0,0,.46);
+    }
+    .material-ring { position: absolute; width: min(59vw, 820px); aspect-ratio: 1; border-radius: 50%; transform: translateX(-25vw); border: 1px solid rgba(218,200,178,.17); }
+
+    .modes-bg { background: radial-gradient(ellipse at 50% 50%, rgba(var(--accent-rgb), .09), transparent 38%), #040506; }
+    .mode-stage { width: min(82vw, 1100px); aspect-ratio: 16/9; display: grid; place-items: center; }
+    .mode-halo { position: absolute; width: 34vw; max-width: 490px; aspect-ratio: 1; border-radius: 50%; border: 1px solid rgba(var(--accent-rgb),.2); box-shadow: 0 0 100px rgba(var(--accent-rgb),.06), inset 0 0 100px rgba(var(--accent-rgb),.05); }
+    .mode-halo::before, .mode-halo::after { content: ""; position: absolute; inset: 14%; border: 1px solid rgba(255,255,255,.11); border-radius: 50%; }
+    .mode-halo::after { inset: 29%; border-color: rgba(var(--accent-rgb),.34); }
+    .mode-orb { width: 108px; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 36% 30%, #fff, var(--accent) 12%, #0f1a21 50%, #020304 72%); box-shadow: 0 0 75px rgba(var(--accent-rgb),.22); transition: transform 1s var(--curve), box-shadow 1s var(--curve); }
+    body.focus-mode .mode-orb { transform: scale(1.38); box-shadow: 0 0 150px rgba(var(--accent-rgb),.42); }
+    body.focus-mode .mode-halo { transform: scale(.82); }
+    .mode-control { margin-top: 34px; display: flex; gap: 10px; }
+
+    .color-panel {
+      display: flex; gap: 10px; align-items: center; width: max-content; margin-top: 34px; padding: 7px;
+      border-radius: 999px; background: rgba(255,255,255,.06); box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .swatch { width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--swatch); cursor: pointer; position: relative; transition: transform .55s var(--curve); }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch[aria-pressed="true"]::after { content: ""; position: absolute; inset: -4px; border: 1px solid rgba(255,255,255,.62); border-radius: 50%; }
+    .swatch-label { padding: 0 12px 0 7px; min-width: 98px; color: var(--muted); font-size: 11px; }
+
+    .focus-section { min-height: 100vh; min-height: 100svh; }
+    .focus-stage { position: relative; min-height: 100vh; min-height: 100svh; display: grid; place-items: center; overflow: clip; }
+    .focus-product { width: min(44vw, 620px); z-index: 1; will-change: transform; }
+    .focus-copy { position: absolute; width: min(1150px, calc(100% - 96px)); z-index: 2; pointer-events: none; }
+    .focus-copy h2 { max-width: 760px; font-size: clamp(62px, 9vw, 136px); line-height: .82; letter-spacing: -.075em; }
+    .focus-word { color: var(--accent); font-family: "Newsreader", Georgia, serif; font-weight: 300; }
+    .focus-label { position: absolute; right: 6vw; bottom: 10vh; color: var(--muted); font-size: 11px; line-height: 1.8; letter-spacing: .12em; text-transform: uppercase; }
+
+    .horizontal-section { min-height: 100vh; min-height: 100svh; overflow: hidden; background: #e7e3dc; color: #111214; }
+    .horizontal-track { display: flex; width: max-content; height: 100vh; height: 100svh; will-change: transform; }
+    .h-panel { width: 78vw; min-width: 800px; height: 100%; padding: 13vh 6vw 8vh; display: flex; flex-direction: column; justify-content: space-between; }
+    .h-panel:first-child { width: 72vw; }
+    .h-panel-kicker { color: #626467; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; }
+    .h-panel h3 { max-width: 780px; margin: auto 0; font-size: clamp(58px, 8vw, 120px); line-height: .88; letter-spacing: -.07em; font-weight: 520; }
+    .h-panel h3 em { font-family: "Newsreader", Georgia, serif; font-weight: 300; }
+    .spec-card-shell { width: min(520px, 100%); padding: 7px; border-radius: 34px; background: rgba(17,18,20,.08); }
+    .spec-card { padding: 34px; border-radius: 27px; background: rgba(250,249,246,.72); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 25px 70px rgba(42,37,29,.08); }
+    .spec-value { font-size: clamp(72px, 9vw, 138px); line-height: .8; letter-spacing: -.08em; }
+    .spec-caption { margin-top: 22px; color: #5f6062; line-height: 1.6; }
+    .h-panel-dark { background: #111214; color: var(--ink); }
+    .h-panel-blue { background: #bcecff; color: #0b1114; }
+    .material-sample { width: min(510px, 70vw); aspect-ratio: 1.3; border-radius: 44px; transform: rotate(-5deg); background: linear-gradient(145deg,#d6d1c9,#faf8f3 40%,#8c8c89); box-shadow: 0 50px 120px rgba(0,0,0,.14), inset 0 1px 0 white; }
+
+    .details-section { min-height: auto; padding: 18vh 0; background: #08090b; }
+    .details-grid { width: min(1180px, calc(100% - 96px)); margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8vw; align-items: start; }
+    .details-copy { position: sticky; top: 22vh; }
+    .details-list { border-top: 1px solid rgba(255,255,255,.12); }
+    details { border-bottom: 1px solid rgba(255,255,255,.12); }
+    summary { min-height: 92px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; list-style: none; font-size: 18px; }
+    summary::-webkit-details-marker { display: none; }
+    .plus { width: 28px; height: 28px; position: relative; border-radius: 50%; background: rgba(255,255,255,.06); }
+    .plus::before, .plus::after { content: ""; position: absolute; left: 8px; top: 13px; width: 12px; height: 1px; background: currentColor; transition: transform .6s var(--curve); }
+    .plus::after { transform: rotate(90deg); }
+    details[open] .plus::after { transform: rotate(0); }
+    .details-answer { max-width: 500px; padding: 0 42px 28px 0; color: var(--muted); line-height: 1.7; }
+
+    .finale { min-height: 105vh; min-height: 105svh; text-align: center; background: radial-gradient(circle at 50% 60%, rgba(var(--accent-rgb),.16), transparent 34%), #050608; }
+    .finale .layer-copy { display: grid; justify-items: center; }
+    .finale h2 { max-width: 920px; margin-bottom: 28px; font-size: clamp(62px, 10vw, 150px); line-height: .82; letter-spacing: -.08em; }
+    .finale h2 em { display: block; color: var(--accent); font-family: "Newsreader", Georgia, serif; font-weight: 300; }
+    .finale p { color: var(--muted); }
+    .finale .button { margin-top: 22px; }
+    .footer-meta { position: absolute; bottom: var(--safe-bottom); left: 48px; right: 48px; display: flex; justify-content: space-between; color: rgba(255,255,255,.38); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; }
+
+    .reveal { will-change: transform, opacity; }
+    .reduced-motion *, .reduced-motion *::before, .reduced-motion *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    .reduced-motion .layer, .reduced-motion .horizontal-track, .reduced-motion .focus-product,
+    .reduced-motion .reveal, .reduced-motion .magnetic, .reduced-motion .tilt-zone,
+    .reduced-motion .model-object { transform: none !important; opacity: 1 !important; }
+    .reduced-motion .cursor-aura { display: none; }
+
+    @media (max-width: 768px) {
+      .cursor-aura, .progress-rail, .nav-meta { display: none; }
+      .nav-shell { width: calc(100% - 24px); }
+      .layer-copy, .focus-copy, .details-grid { width: calc(100% - 32px); }
+      .scene { min-height: 100vh; min-height: 100svh; padding: 88px 0 52px; }
+      .layer { inset: -6%; }
+      .hero-copy { padding-top: 6vh; }
+      h1 { font-size: clamp(58px, 20vw, 86px); }
+      .hero-intro, .hero-actions { margin-left: 0; }
+      .hero-intro { max-width: 88%; }
+      .model-cluster { width: 120vw; height: 54vh; right: -22vw; top: 20vh; transform: rotate(-2deg); opacity: .7; }
+      .model-tools, .model-hotspot, .model-insight, .model-credit { display: none; }
+      .display { font-size: clamp(48px, 15vw, 76px); }
+      .section-copy.right { margin-left: 0; }
+      .micro-stat { gap: 28px; }
+      .material-disc, .material-ring { width: 86vw; transform: translate(-31vw, 14vh); opacity: .72; }
+      .mode-halo { width: 78vw; }
+      .mode-stage { width: 100vw; opacity: .72; }
+      .focus-copy h2 { font-size: clamp(58px, 18vw, 92px); }
+      .focus-product { width: 82vw; opacity: .72; }
+      .focus-label { right: 20px; bottom: 70px; }
+      .horizontal-section { min-height: auto; overflow: visible; }
+      .horizontal-track { width: 100%; height: auto; display: grid; }
+      .h-panel, .h-panel:first-child { width: 100%; min-width: 0; min-height: 100svh; padding: 110px 20px 70px; }
+      .h-panel h3 { font-size: clamp(54px, 17vw, 82px); }
+      .details-section { padding: 120px 0; }
+      .details-grid { grid-template-columns: 1fr; gap: 52px; }
+      .details-copy { position: static; }
+      .footer-meta { left: 18px; right: 18px; }
+      .motion-toggle { right: 12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .layer, .horizontal-track, .focus-product, .reveal { transform: none !important; opacity: 1 !important; }
+      .cursor-aura { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至主要内容</a>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="cursor-aura" aria-hidden="true"></div>
+
+  <header class="nav-shell" aria-label="主导航">
+    <div class="nav-core">
+      <a class="brand" href="#hero" data-scroll>
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M4 15.5 12 3l8 12.5-8 5.5-8-5.5Z"/><path fill="currentColor" d="m8.3 14.8 3.7-6 3.7 6-3.7 2.4-3.7-2.4Z"/></svg>
+        <span>AERIS</span>
+      </a>
+      <span class="nav-meta">ONE / SPATIAL AUDIO</span>
+      <button class="menu-button" type="button" aria-expanded="false" aria-controls="menu-overlay" aria-label="打开导航菜单">
+        <span class="menu-icon" aria-hidden="true"><i></i><i></i></span>
+      </button>
+    </div>
+  </header>
+
+  <div class="menu-overlay" id="menu-overlay" aria-hidden="true">
+    <nav class="menu-list" aria-label="章节导航">
+      <a href="#sound" data-scroll><span>声场</span></a>
+      <a href="#material" data-scroll><span>材质</span></a>
+      <a href="#modes" data-scroll><span>模式</span></a>
+      <a href="#specs" data-scroll><span>规格</span></a>
+    </nav>
+  </div>
+
+  <nav class="progress-rail" aria-label="页面进度">
+    <a href="#hero" data-scroll aria-label="前往开场"></a>
+    <a href="#sound" data-scroll aria-label="前往声场"></a>
+    <a href="#material" data-scroll aria-label="前往材质"></a>
+    <a href="#modes" data-scroll aria-label="前往模式"></a>
+    <a href="#focus" data-scroll aria-label="前往降噪"></a>
+    <a href="#specs" data-scroll aria-label="前往规格"></a>
+    <a href="#finale" data-scroll aria-label="前往结尾"></a>
+  </nav>
+
+  <button class="motion-toggle" type="button" aria-pressed="true">
+    <span class="motion-dot" aria-hidden="true"></span><span class="motion-label">动效：开启</span>
+  </button>
+
+  <main id="main">
+    <section class="scene hero" id="hero" data-section>
+      <div class="layer layer-bg aurora" data-speed="-10" aria-hidden="true">
+        <div class="grid-plane"></div><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbit orbit-dot"></div>
+      </div>
+      <div class="model-layer">
+        <div class="model-cluster">
+          <div class="model-shell">
+            <div class="model-core">
+              <div class="model-fallback" role="status">正在构建 3D 声场…</div>
+              <div class="model-canvas" id="model-canvas" role="group" aria-label="可拖动或使用方向键旋转的 AERIS ONE 精细耳机模型" tabindex="0">
+                <canvas id="model-webgl" aria-label="具有真实几何结构的三维耳机"></canvas>
+                <div class="model-gesture" aria-hidden="true"></div>
+              </div>
+              <div class="model-badge" aria-hidden="true"><i></i>实时 3D · 拖动旋转</div>
+              <button class="model-hotspot hotspot-a" type="button" data-hotspot="driver" aria-label="查看双腔驱动单元"></button>
+              <button class="model-hotspot hotspot-b" type="button" data-hotspot="controls" aria-label="查看触觉控制区"></button>
+              <button class="model-hotspot hotspot-c" type="button" data-hotspot="band" aria-label="查看头梁结构"></button>
+              <div class="model-insight" aria-live="polite"><strong>双腔驱动单元</strong><span>独立控制低频气流与高频解析，减少腔体内部驻波。</span></div>
+              <div class="model-tools">
+                <div class="view-switcher" aria-label="3D 模型控制">
+                  <button class="view-button active" type="button" data-view="reset">重置</button>
+                  <button class="view-button" type="button" data-view="auto">环绕</button>
+                  <button class="view-button" type="button" data-view="back">背面</button>
+                </div>
+                <label class="depth-control"><span class="depth-label"><span>缩放</span><output>100%</output></span><input type="range" min="80" max="135" value="100" aria-label="调节 3D 模型缩放"></label>
+              </div>
+            </div>
+          </div>
+          <a class="model-credit" href="https://sketchfab.com/3d-models/headphones-b12a7fb702804cc19537047a033fe0d9" target="_blank" rel="noopener">外观参考：re1monsen · 查看原作 ↗</a>
+        </div>
+      </div>
+      <div class="layer-copy hero-copy" data-speed="40">
+        <div class="eyebrow reveal">AERIS ONE · 2026</div>
+        <h1 class="reveal">聆听，<em>空间本身。</em></h1>
+        <p class="hero-intro reveal">不是更响，而是更深。AERIS ONE 以实时空间建模，让声音在你周围拥有真实的距离、方向与呼吸。</p>
+        <div class="hero-actions reveal">
+          <a class="button magnetic" href="#sound" data-scroll><span>进入声场</span><span class="button-icon" aria-hidden="true">↓</span></a>
+          <button class="button button-ghost mode-button magnetic" type="button"><span>沉浸预览</span><span class="button-icon" aria-hidden="true">◌</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" id="sound" data-section>
+      <div class="layer layer-bg wave-bg" data-speed="-12" aria-hidden="true"></div>
+      <div class="layer layer-visual" data-speed="23" aria-hidden="true">
+        <svg class="waveform" viewBox="0 0 1400 500" preserveAspectRatio="none">
+          <path d="M0 250C128 250 126 96 257 96s127 308 260 308 124-256 261-256 117 203 248 203 135-101 374-101" fill="none" stroke="rgba(255,255,255,.11)" stroke-width="1"/>
+          <path class="wave-core" d="M0 250c138 0 126-66 257-66s128 132 260 132 126-110 261-110 120 87 248 87 137-43 374-43" fill="none" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="layer-copy" data-speed="44">
+        <div class="section-copy right">
+          <div class="eyebrow reveal">01 / 自适应声场</div>
+          <h2 class="display reveal">声音不再来自耳机，<span class="serif">而是空间。</span></h2>
+          <p class="lede reveal">每秒 48,000 次环境采样，重构房间的反射与距离。你转身时，舞台仍留在原地。</p>
+          <div class="micro-stat reveal"><div><strong>48k</strong><span>次 / 秒建模</span></div><div><strong>0.7ms</strong><span>空间延迟</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" id="material" data-section>
+      <div class="layer layer-bg material-bg" data-speed="-8" aria-hidden="true"></div>
+      <div class="layer layer-visual" data-speed="19" aria-hidden="true"><div class="material-ring"></div><div class="material-disc"></div></div>
+      <div class="layer-copy" data-speed="42">
+        <div class="section-copy right">
+          <div class="eyebrow reveal">02 / 零压构造</div>
+          <h2 class="display reveal">精密的重量，<span class="serif">若无其物。</span></h2>
+          <p class="lede reveal">航空铝骨架、微孔织物与记忆泡棉形成连续曲面。312 克重量被均匀分散，长时间佩戴仍保持安静。</p>
+          <div class="color-panel reveal" aria-label="选择产品颜色">
+            <button class="swatch" style="--swatch:#92e7ff" data-color="#92e7ff" data-rgb="146,231,255" data-name="冰川蓝" aria-label="冰川蓝" aria-pressed="true"></button>
+            <button class="swatch" style="--swatch:#e5c7a9" data-color="#e5c7a9" data-rgb="229,199,169" data-name="沙丘金" aria-label="沙丘金" aria-pressed="false"></button>
+            <button class="swatch" style="--swatch:#c0ff8c" data-color="#c0ff8c" data-rgb="192,255,140" data-name="苔原绿" aria-label="苔原绿" aria-pressed="false"></button>
+            <span class="swatch-label" aria-live="polite">冰川蓝</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene" id="modes" data-section>
+      <div class="layer layer-bg modes-bg" data-speed="-10" aria-hidden="true"></div>
+      <div class="layer layer-visual" data-speed="17" aria-hidden="true"><div class="mode-stage"><div class="mode-halo"></div><div class="mode-orb"></div></div></div>
+      <div class="layer-copy" data-speed="39">
+        <div class="section-copy">
+          <div class="eyebrow reveal">03 / 一键静界</div>
+          <h2 class="display reveal">世界退后，<span class="serif">专注向前。</span></h2>
+          <p class="lede reveal">十二麦克风阵列识别 360° 环境噪声。选择通透或静界，让边界在一瞬间重写。</p>
+          <div class="mode-control reveal"><button class="button mode-button magnetic" type="button"><span class="mode-text">开启静界</span><span class="button-icon" aria-hidden="true">◉</span></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="focus-section" id="focus" data-section>
+      <div class="focus-stage">
+        <div class="focus-copy"><div class="eyebrow">04 / AERIS ENGINE</div><h2>每一层噪声，<br><span class="focus-word">逐层消隐。</span></h2></div>
+        <svg class="focus-product" viewBox="0 0 760 760" aria-hidden="true">
+          <defs><radialGradient id="sphere" cx="35%" cy="28%"><stop stop-color="#54616a"/><stop offset=".22" stop-color="#171b1f"/><stop offset=".7" stop-color="#050607"/><stop offset="1" stop-color="#000"/></radialGradient></defs>
+          <circle cx="380" cy="380" r="260" fill="url(#sphere)" stroke="rgba(255,255,255,.18)"/>
+          <circle cx="380" cy="380" r="185" fill="none" stroke="var(--accent)" opacity=".28"/>
+          <circle cx="380" cy="380" r="95" fill="#020303" stroke="rgba(255,255,255,.15)"/>
+          <path d="M290 380c35-65 145-65 180 0-35 65-145 65-180 0Z" fill="var(--accent)" opacity=".12"/>
+          <circle cx="380" cy="380" r="24" fill="var(--accent)"/>
+        </svg>
+        <div class="focus-label">计算声学核心<br>A1 / 4 nm<br>24-bit / 192 kHz</div>
+      </div>
+    </section>
+
+    <section class="horizontal-section" id="specs" data-section>
+      <div class="horizontal-track">
+        <article class="h-panel">
+          <span class="h-panel-kicker">05 / 性能画廊 · 横向滚动</span>
+          <h3>更少数字，<br><em>更多音乐。</em></h3>
+          <span class="h-panel-kicker">继续滚动 →</span>
+        </article>
+        <article class="h-panel h-panel-blue">
+          <span class="h-panel-kicker">续航</span>
+          <div class="spec-card-shell"><div class="spec-card"><div class="spec-value">42h</div><p class="spec-caption">一次充电，覆盖从清晨通勤到夜间航班。充电 10 分钟，再听 6 小时。</p></div></div>
+          <span class="h-panel-kicker">USB-C · FAST CHARGE</span>
+        </article>
+        <article class="h-panel h-panel-dark">
+          <span class="h-panel-kicker">材料</span>
+          <div class="material-sample" aria-hidden="true"></div>
+          <span class="h-panel-kicker">75% RECYCLED ALUMINUM</span>
+        </article>
+        <article class="h-panel">
+          <span class="h-panel-kicker">连接</span>
+          <h3>靠近。<br><em>即刻抵达。</em></h3>
+          <span class="h-panel-kicker">BLUETOOTH 6 · UWB · WI-FI AUDIO</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="details-section" id="details" data-section>
+      <div class="details-grid">
+        <div class="details-copy reveal"><div class="eyebrow">06 / 精密细节</div><h2 class="display">少一些，<br><span class="serif">恰到好处。</span></h2></div>
+        <div class="details-list reveal">
+          <details><summary><span>空间音频如何工作？</span><span class="plus" aria-hidden="true"></span></summary><div class="details-answer">头部追踪与室内声学模型同步运行，持续计算声音的方向、距离与反射，使虚拟声源稳定存在于真实空间。</div></details>
+          <details><summary><span>能否关闭动态效果？</span><span class="plus" aria-hidden="true"></span></summary><div class="details-answer">可以。页面右下角可切换精简模式；系统开启“减少动态效果”时，视差与惯性滚动会自动停用，内容与功能保持完整。</div></details>
+          <details><summary><span>支持哪些设备？</span><span class="plus" aria-hidden="true"></span></summary><div class="details-answer">兼容蓝牙设备，并针对 iPhone、iPad 与 Mac 提供低延迟空间音频。USB-C 有线模式支持 24-bit / 192 kHz。</div></details>
+          <details><summary><span>是否适合长途佩戴？</span><span class="plus" aria-hidden="true"></span></summary><div class="details-answer">零压头梁将受力分散至更大接触面，透气耳罩可替换清洗，整机重量控制在 312 克。</div></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="scene finale" id="finale" data-section>
+      <div class="layer layer-bg" data-speed="-9" aria-hidden="true"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div></div>
+      <div class="layer-copy" data-speed="35">
+        <div class="eyebrow reveal">07 / AERIS ONE</div>
+        <h2 class="reveal">不是听见。<em>是抵达。</em></h2>
+        <p class="reveal">AERIS ONE · 冰川蓝 · ¥ 4,299</p>
+        <a class="button magnetic reveal" href="mailto:studio@example.com"><span>预约体验</span><span class="button-icon" aria-hidden="true">↗</span></a>
+      </div>
+      <div class="footer-meta"><span>Designed for depth</span><span>© 2026 AERIS</span></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.8/dist/lenis.min.js"></script>
+  <script src="assets/three.min.js"></script>
+  <script src="viewer.js" defer></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const state = { lenis: null, media: null, ticker: null, motionEnabled: true, cleanups: [], modelTimer: null };
+      const reduceQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const body = document.body;
+      const menuButton = document.querySelector(".menu-button");
+      const menuOverlay = document.querySelector(".menu-overlay");
+      const motionButton = document.querySelector(".motion-toggle");
+      const motionLabel = document.querySelector(".motion-label");
+
+      function listen(target, type, handler, options) {
+        target.addEventListener(type, handler, options);
+        state.cleanups.push(() => target.removeEventListener(type, handler, options));
+      }
+
+      function setMenu(open) {
+        body.classList.toggle("menu-open", open);
+        menuButton.setAttribute("aria-expanded", String(open));
+        menuButton.setAttribute("aria-label", open ? "关闭导航菜单" : "打开导航菜单");
+        menuOverlay.setAttribute("aria-hidden", String(!open));
+        if (open) menuOverlay.querySelector("a")?.focus({ preventScroll: true });
+      }
+
+      function stopModelOrbit() { window.aerisViewer?.stopOrbit(); }
+      function initModel() { /* The dedicated viewer owns model interactions and cleanup. */ }
+
+      function startLenis() {
+        if (typeof Lenis === "undefined" || reduceQuery.matches || !state.motionEnabled) return;
+        state.lenis = new Lenis({ duration: 1.08, smoothWheel: true, syncTouch: false, touchMultiplier: 1.05, wheelMultiplier: .9 });
+        state.lenis.on("scroll", ScrollTrigger.update);
+        state.ticker = (time) => state.lenis?.raf(time * 1000);
+        gsap.ticker.add(state.ticker);
+        gsap.ticker.lagSmoothing(0);
+      }
+
+      function stopLenis() {
+        if (state.ticker && window.gsap) gsap.ticker.remove(state.ticker);
+        state.lenis?.off?.("scroll", ScrollTrigger.update);
+        state.lenis?.destroy();
+        state.lenis = null;
+        state.ticker = null;
+      }
+
+      function buildAnimations() {
+        if (!window.gsap || !window.ScrollTrigger || reduceQuery.matches || !state.motionEnabled) {
+          window.gsap?.set?.(".reveal", { clearProps: "all" });
+          return;
+        }
+
+        gsap.registerPlugin(ScrollTrigger);
+        startLenis();
+        state.media = gsap.matchMedia();
+
+        state.media.add({ desktop: "(min-width: 769px)", mobile: "(max-width: 768px)" }, (context) => {
+          const { desktop } = context.conditions;
+          const scope = gsap.context(() => {
+            const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
+            intro.from(".nav-shell", { y: -90, autoAlpha: 0, duration: 1.2 })
+              .from("#hero .eyebrow", { y: 28, autoAlpha: 0, duration: .8 }, .15)
+              .from("#hero h1", { y: 90, autoAlpha: 0, duration: 1.35 }, .2)
+              .from("#hero .hero-intro", { y: 45, autoAlpha: 0, duration: 1 }, .5)
+              .from("#hero .hero-actions", { y: 35, autoAlpha: 0, duration: .9 }, .62)
+              .from("#hero .model-shell", { autoAlpha: 0, duration: 1.7 }, .12);
+
+            document.querySelectorAll(".scene").forEach((scene) => {
+              scene.querySelectorAll(".layer[data-speed], .layer-copy[data-speed]").forEach((layer) => {
+                const speed = Number(layer.dataset.speed || 0) * (desktop ? 1 : .28);
+                gsap.fromTo(layer, { yPercent: -speed * .48 }, {
+                  yPercent: speed * .48,
+                  ease: "none",
+                  scrollTrigger: { trigger: scene, start: "top bottom", end: "bottom top", scrub: desktop ? .65 : .35, invalidateOnRefresh: true }
+                });
+              });
+            });
+
+            gsap.utils.toArray(".reveal").filter((el) => !el.closest("#hero")).forEach((el) => {
+              gsap.from(el, {
+                y: desktop ? 70 : 36, autoAlpha: 0, duration: 1.15, ease: "power3.out",
+                scrollTrigger: { trigger: el, start: "top 88%", once: true }
+              });
+            });
+
+            if (desktop) {
+              const focusTimeline = gsap.timeline({
+                scrollTrigger: { trigger: ".focus-stage", start: "top top", end: "+=1900", pin: true, scrub: .8, anticipatePin: 1 }
+              });
+              focusTimeline.fromTo(".focus-product", { scale: .54, rotation: -14 }, { scale: 1.08, rotation: 8, ease: "none" }, 0)
+                .fromTo(".focus-copy", { yPercent: 55, autoAlpha: 0 }, { yPercent: -45, autoAlpha: 1, ease: "none" }, 0)
+                .fromTo(".focus-label", { y: 90, autoAlpha: 0 }, { y: -50, autoAlpha: 1, ease: "none" }, .18);
+
+              const track = document.querySelector(".horizontal-track");
+              gsap.to(track, {
+                x: () => -(track.scrollWidth - window.innerWidth), ease: "none",
+                scrollTrigger: {
+                  trigger: ".horizontal-section", start: "top top", end: () => `+=${track.scrollWidth - window.innerWidth}`,
+                  pin: true, scrub: .7, anticipatePin: 1, invalidateOnRefresh: true
+                }
+              });
+            }
+          });
+          return () => scope.revert();
+        });
+
+        requestAnimationFrame(() => ScrollTrigger.refresh());
+      }
+
+      function destroyMotion() {
+        state.media?.revert();
+        state.media = null;
+        stopLenis();
+      }
+
+      function applyMotionPreference() {
+        destroyMotion();
+        const active = state.motionEnabled && !reduceQuery.matches;
+        body.classList.toggle("reduced-motion", !active);
+        motionButton.setAttribute("aria-pressed", String(active));
+        motionLabel.textContent = reduceQuery.matches ? "动效：跟随系统精简" : active ? "动效：开启" : "动效：精简";
+        if (!active) stopModelOrbit();
+        buildAnimations();
+      }
+
+      function scrollToTarget(target) {
+        if (!target) return;
+        setMenu(false);
+        if (state.lenis) state.lenis.scrollTo(target, { offset: 0, duration: 1.2 });
+        else target.scrollIntoView({ behavior: reduceQuery.matches ? "auto" : "smooth" });
+      }
+
+      listen(menuButton, "click", () => setMenu(!body.classList.contains("menu-open")));
+      listen(document, "keydown", (event) => { if (event.key === "Escape") setMenu(false); });
+      document.querySelectorAll("[data-scroll]").forEach((link) => listen(link, "click", (event) => {
+        const id = link.getAttribute("href");
+        if (!id?.startsWith("#")) return;
+        event.preventDefault();
+        scrollToTarget(document.querySelector(id));
+      }));
+
+      listen(motionButton, "click", () => {
+        if (reduceQuery.matches) return;
+        state.motionEnabled = !state.motionEnabled;
+        applyMotionPreference();
+      });
+      const onReduceChange = () => applyMotionPreference();
+      reduceQuery.addEventListener?.("change", onReduceChange);
+      state.cleanups.push(() => reduceQuery.removeEventListener?.("change", onReduceChange));
+
+      document.querySelectorAll(".mode-button").forEach((button) => listen(button, "click", () => {
+        const active = body.classList.toggle("focus-mode");
+        document.querySelectorAll(".mode-text").forEach((label) => { label.textContent = active ? "退出静界" : "开启静界"; });
+        button.setAttribute("aria-pressed", String(active));
+      }));
+
+      document.querySelectorAll(".swatch").forEach((swatch) => listen(swatch, "click", () => {
+        document.documentElement.style.setProperty("--accent", swatch.dataset.color);
+        document.documentElement.style.setProperty("--accent-rgb", swatch.dataset.rgb);
+        document.querySelectorAll(".swatch").forEach((item) => item.setAttribute("aria-pressed", String(item === swatch)));
+        document.querySelector(".swatch-label").textContent = swatch.dataset.name;
+      }));
+
+      if (window.gsap && matchMedia("(pointer:fine)").matches) {
+        const aura = document.querySelector(".cursor-aura");
+        const moveX = gsap.quickTo(aura, "x", { duration: .55, ease: "power3.out" });
+        const moveY = gsap.quickTo(aura, "y", { duration: .55, ease: "power3.out" });
+        listen(window, "pointermove", (event) => { moveX(event.clientX); moveY(event.clientY); gsap.to(aura, { autoAlpha: 1, duration: .4, overwrite: "auto" }); }, { passive: true });
+        listen(document.documentElement, "mouseleave", () => gsap.to(aura, { autoAlpha: 0, duration: .4 }));
+
+        document.querySelectorAll(".magnetic").forEach((button) => {
+          const xTo = gsap.quickTo(button, "x", { duration: .55, ease: "power3.out" });
+          const yTo = gsap.quickTo(button, "y", { duration: .55, ease: "power3.out" });
+          listen(button, "pointermove", (event) => { const rect = button.getBoundingClientRect(); xTo((event.clientX - rect.left - rect.width / 2) * .16); yTo((event.clientY - rect.top - rect.height / 2) * .22); });
+          listen(button, "pointerleave", () => { xTo(0); yTo(0); });
+        });
+
+      }
+
+      if ("IntersectionObserver" in window) {
+        const railLinks = [...document.querySelectorAll(".progress-rail a")];
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            railLinks.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`));
+          });
+        }, { rootMargin: "-42% 0px -42% 0px" });
+        document.querySelectorAll("[data-section]").forEach((section) => observer.observe(section));
+        state.cleanups.push(() => observer.disconnect());
+      }
+
+      initModel();
+      applyMotionPreference();
+      window.addEventListener("load", () => window.ScrollTrigger?.refresh(), { once: true });
+      window.addEventListener("pagehide", () => {
+        destroyMotion();
+        state.cleanups.splice(0).forEach((cleanup) => cleanup());
+        window.ScrollTrigger?.getAll().forEach((trigger) => trigger.kill());
+        window.gsap?.killTweensOf(document.querySelectorAll(".magnetic, .cursor-aura, .tilt-zone, .model-object"));
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>
