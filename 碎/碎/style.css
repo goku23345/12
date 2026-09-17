@@ -1,0 +1,649 @@
+/* ==========================================================================
+   UNBELIEVABLY CRAP — 视觉层
+   粗野主义实验网页 / 桌面优先
+
+   设计系统（对照参考站点提炼）：
+     · 只有 6 个灰阶 + 1 个红。红色是全站唯一强调色，只用于标点式的点缀。
+     · 字号只有 4 档：10px 标签 / 14px UI / 18–24px 正文 / 巨大标题。
+     · 签名手法是「标题向下溶解」：background-clip:text + ink→透明 垂直渐变。
+     · 精致而固定的边框（角落 HUD + 底栏 + 12 栏细线）框住混乱的内容。
+       边框是精确的，破碎只发生在内容里 —— 这是「粗野但高级」的真正机制。
+   ========================================================================== */
+
+/* ==========================================================================
+   1. 令牌
+   ========================================================================== */
+:root{
+  /* 灰阶 —— 全部 6 档，不多一个 */
+  --paper:#ffffff;
+  --fog:#afafaf;
+  --slate:#6e6e6e;
+  --label:#636363;
+  --fade:#c3c3c3;
+  --grey:#c8c8c8;
+  --ink:#393939;
+  --ink-2:#1f1f1f;
+
+  /* 全站唯一的高饱强调色 */
+  --red:#e8271c;
+
+  --font-display:'Inter Tight','Helvetica Neue',Helvetica,Arial,'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-main:'Inter','Helvetica Neue',Helvetica,Arial,'PingFang SC','Microsoft YaHei',sans-serif;
+  --font-mono:'Courier New',Consolas,'Lucida Console',monospace;
+  --font-pixel:'MS Gothic','SimSun','宋体',SimHei,monospace;
+
+  --track:-.04em;          /* 全站统一字距，参考站点的 -0.04em */
+  --t-label:10px;
+  --t-ui:14px;
+  --t-body:18px;
+  --t-lead:24px;
+  --t-sub:34px;
+
+  --pad-l:176px;
+  --pad-r:44px;
+  --bar-h:28px;
+}
+
+*,*::before,*::after{box-sizing:border-box;}
+
+html{
+  overflow-x:hidden;
+  background:var(--paper);
+  scroll-behavior:auto;              /* 禁止平滑滚动 */
+  -webkit-text-size-adjust:100%;
+}
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--font-main);
+  font-weight:400;
+  font-size:var(--t-body);
+  line-height:1.65;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+::selection{background:var(--red);color:#fff;}
+
+/* 老派的粗滚动条 */
+::-webkit-scrollbar{width:14px;height:14px;}
+::-webkit-scrollbar-track{background:var(--paper);border-left:1px solid var(--grey);}
+::-webkit-scrollbar-thumb{background:var(--ink);border:3px solid var(--paper);}
+::-webkit-scrollbar-thumb:hover{background:var(--red);}
+
+img{display:block;max-width:100%;}
+button{font:inherit;}
+b{font-weight:500;}
+
+/* 小方块——参考站点里到处出现的 6 × 6.667px 标记 */
+.mk{
+  display:inline-block;
+  width:6px;height:6.667px;
+  background:var(--ink);
+  opacity:.5;
+  flex:none;
+  vertical-align:middle;
+}
+.mk--red{background:var(--red);opacity:1;}
+
+.dim{color:var(--label);}
+
+/* ==========================================================================
+   2. 质感层：CRT 扫描线 + 胶片颗粒
+   两个固定全屏图层，不吃指针。这是「数字页面 → 印刷品」的关键一步。
+   ========================================================================== */
+.scan{
+  position:fixed;inset:0;z-index:998;pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 50%,
+      rgba(0,0,0,0) 48%, rgba(0,0,0,.13) 100%),
+    repeating-linear-gradient(0deg,
+      rgba(0,0,0,.055) 0px, rgba(0,0,0,.055) 1px,
+      rgba(0,0,0,0) 1px, rgba(0,0,0,0) 3px);
+  background-position:0 0, 0 var(--scan-roll,0px);
+}
+
+/* 噪点是内联 SVG 湍流，不依赖任何外部图片。
+   混合模式与参数直接沿用参考站点调好的值：
+   overlay + contrast(300%) 让噪点在近白底上真正咬得住。 */
+.grain{
+  position:fixed;inset:0;z-index:999;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:5em 5em;
+  opacity:.14;
+  filter:contrast(300%) brightness(80%);
+  mix-blend-mode:overlay;
+  animation:grain .85s steps(1,end) infinite;
+}
+/* 阶跃，不是缓动 —— 噪点必须在位置之间「跳」，平滑插值会看成一个移动的图案 */
+@keyframes grain{
+  0%  {background-position:0em 0em;}
+  20% {background-position:-.5em .3em;}
+  40% {background-position:.4em -.2em;}
+  60% {background-position:-.3em -.4em;}
+  80% {background-position:.2em .5em;}
+}
+
+/* ==========================================================================
+   3. 固定边框
+   ========================================================================== */
+.chrome{
+  position:fixed;inset:0;z-index:40;
+  pointer-events:none;
+}
+
+/* 12 栏细线：内容错位所参照的那个「正确」。
+   与 .sec 的 1240px 内容盒严格对齐 —— 对齐了才谈得上「故意错位」。 */
+.gridlines{
+  position:absolute;
+  left:var(--pad-l);top:0;bottom:0;
+  width:calc(100% - var(--pad-l) - var(--pad-r));
+  max-width:1240px;
+  display:grid;
+  grid-template-columns:repeat(12,1fr);
+}
+.gridlines i{border-left:1px solid rgba(57,57,57,.055);}
+
+.hud{
+  position:absolute;
+  font-size:var(--t-ui);
+  line-height:1.35;
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  color:var(--ink);
+  white-space:nowrap;
+}
+.hud span{display:block;}
+.hud--tl{top:12px;left:20px;}
+.hud--tc{top:12px;left:50%;transform:translateX(-50%);color:var(--label);font-size:var(--t-label);}
+.hud--tr{top:12px;right:20px;text-align:right;}
+.hud--tr b{color:var(--red);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+
+/* 左侧 10px 标签栏 */
+.rail{
+  position:absolute;
+  left:20px;top:50%;
+  transform:translateY(-50%);
+  width:132px;
+  font-size:var(--t-label);
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  line-height:1.5;
+  color:var(--ink);
+}
+.rail__row{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.rail__row.dim{color:var(--label);}
+
+/* 底栏：深色，28px */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;height:var(--bar-h);z-index:60;
+  background:var(--ink);
+  display:flex;align-items:center;
+  padding:0 10px;
+  font-size:var(--t-ui);
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  color:var(--grey);
+}
+.bar__left{display:flex;align-items:center;gap:18px;flex:none;}
+.bar__btn{
+  display:flex;align-items:center;gap:6px;
+  color:var(--grey);text-decoration:none;line-height:1;
+}
+.bar__btn:hover{color:#fff;}
+.bar__prog{
+  flex:1;height:2px;margin:0 20px;
+  background:rgba(255,255,255,.14);
+  position:relative;
+}
+.bar__prog i{display:block;height:100%;width:0;background:#fff;}
+.bar__right{display:flex;align-items:center;gap:12px;line-height:1;flex:none;}
+.bar__coord{color:var(--label);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+.bar__clock{color:#fff;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+.bar__pct b{color:var(--red);font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;}
+.bar .dim{color:#7e7e7e;}
+.bar__btn:hover .mk{opacity:1;background:#fff;}
+
+/* ==========================================================================
+   4. 文档与栅格基准
+   ========================================================================== */
+.doc{
+  position:relative;
+  width:100%;
+  padding:0 var(--pad-r) 150px var(--pad-l);
+}
+
+.sec{
+  position:relative;
+  max-width:1240px;
+  padding:96px 0 40px;
+}
+
+/* 章节头：细线 + 编号 + 标题 + 红方块 */
+.shead{
+  display:flex;align-items:center;gap:10px;
+  padding-bottom:8px;
+  margin-bottom:44px;
+  border-bottom:1px solid var(--grey);
+  font-size:var(--t-label);
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  color:var(--ink);
+}
+.shead__no{color:var(--label);font-variant-numeric:tabular-nums;}
+.shead__tt{flex:1;}
+
+/* ==========================================================================
+   5. 排版
+   ========================================================================== */
+.label{
+  font-size:var(--t-label);
+  line-height:1.6;
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  margin:0;
+}
+.ui{font-size:var(--t-ui);letter-spacing:var(--track);}
+
+/* 正文：只有三档 */
+.body{margin:0 0 30px;font-size:var(--t-body);line-height:1.65;letter-spacing:-.01em;}
+.lead{margin:0 0 30px;font-size:var(--t-lead);line-height:1.42;letter-spacing:-.02em;font-weight:300;}
+.sub{
+  margin:0 0 26px;
+  font-size:var(--t-sub);
+  line-height:1.14;
+  letter-spacing:-.03em;
+  font-weight:400;
+}
+.sub--red{color:var(--red);}
+.sub--lg{font-size:clamp(38px,5vw,72px);letter-spacing:-.04em;line-height:1.05;font-weight:400;}
+
+/* 显示级标题：向下溶解 —— 全站签名手法
+   line-height .5 是有意的：文字盒远矮于字形，字形溢出盒子。
+   padding .35em 把盒子的边界补回真实字形范围，渐变的色标才有意义。 */
+.display{
+  font-family:var(--font-display);
+  font-weight:400;
+  text-transform:uppercase;
+  font-size:clamp(3rem,8.6vw,9.75rem);
+  line-height:.5;
+  letter-spacing:-.045em;
+  margin:0;
+  padding-top:.35em;
+  padding-bottom:.35em;
+  background:linear-gradient(to top,
+    rgba(57,57,57,0) 0%,
+    rgba(57,57,57,.30) 34%,
+    var(--ink) 80%);
+  -webkit-background-clip:text;
+          background-clip:text;
+  color:transparent;
+  white-space:nowrap;
+  will-change:transform;
+}
+
+.al-l{text-align:left;}
+.al-c{text-align:center;}
+.al-r{text-align:right;}
+.w-xs{max-width:360px;}
+.w-sm{max-width:460px;}
+.w-md{max-width:600px;}
+.w-lg{max-width:820px;}
+
+/* 错位：有的往里挤，有的干脆跑出栏位。全部是刻意的。 */
+.indent{margin-left:44px;}
+.off-1{margin-left:6%;}
+.off-2{margin-left:auto;margin-right:-2%;}
+.off-l{margin-left:2%;}
+.off-l-2{margin-left:10%;}
+.off-r{margin-left:auto;margin-right:2%;}
+.off-r-2{margin-left:auto;margin-right:-3%;}
+.off-r-3{margin-left:auto;margin-right:-1%;}
+
+/* 分隔线
+   注意：这里只能用 margin-top / margin-bottom。写成 margin:56px 0 会把
+   .off-1 之类工具类的 margin-left 一起重置掉 —— 同权重、后声明者胜。 */
+.hr{height:1px;border:0;background:var(--grey);width:44%;margin-top:56px;margin-bottom:56px;}
+.hr--red{height:2px;background:var(--red);width:26%;margin-left:auto;}
+.hr--thin{background:var(--grey);width:60%;}
+
+.scatterbox{max-width:880px;overflow:visible;}
+.scatterbox--r{margin-left:auto;}
+.scatter .ch{display:inline-block;white-space:pre;will-change:transform;}
+
+/* ==========================================================================
+   6. HERO
+   ========================================================================== */
+.hero{
+  position:relative;
+  padding:110px 0 90px;
+  min-height:88vh;
+  background:linear-gradient(to bottom,var(--paper) 0%,#fbfbfa 60%,var(--fog) 190%);
+  overflow:visible;
+}
+.hero__meta{
+  display:flex;align-items:center;gap:8px;
+  margin-bottom:37px;
+  color:var(--ink);
+}
+.hero__l1{margin-left:-.4vw;}
+.hero__l2{margin-left:17%;margin-top:-.2em;}
+.hero__foot{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:40px;
+  margin-top:44px;
+  max-width:1180px;
+}
+.hero__lede{margin:0;max-width:600px;}
+.hero__hint{color:var(--label);white-space:nowrap;padding-bottom:6px;}
+.hero__hint b{color:var(--red);font-variant-numeric:tabular-nums;}
+
+/* 装饰色块：只有一个红，另外两个是墨与雾 */
+.blk{position:absolute;display:block;will-change:transform;}
+.blk--a{width:64px;height:64px;background:var(--red);top:19%;right:5%;}
+.blk--b{width:26px;height:96px;background:var(--ink);top:9%;left:52%;}
+.blk--c{width:40px;height:40px;background:var(--fade);top:76%;right:26%;}
+
+/* ==========================================================================
+   7. 跑马灯（滚动驱动）
+   ========================================================================== */
+.marq{
+  position:relative;
+  overflow:hidden;
+  height:30px;
+  border-top:1px solid var(--grey);
+  border-bottom:1px solid var(--grey);
+  margin:0 calc(-1 * var(--pad-r)) 0 calc(-1 * var(--pad-l));
+}
+.marq__track{display:flex;white-space:nowrap;will-change:transform;}
+.marq__track span{
+  flex:none;
+  font-size:var(--t-label);
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  line-height:30px;
+  color:var(--slate);
+  padding-right:28px;
+}
+
+/* ==========================================================================
+   8. 假的老旧 UI 碎片
+   参考站点没有这类东西 —— 这里刻意让它们「不属于」这套系统，
+   用 Windows 98 的凹陷边框和像素字，作为对设计系统的一次挑衅。
+   ========================================================================== */
+.widget{
+  width:442px;
+  margin:0 0 0 4%;
+  background:var(--grey);
+  border:2px outset #fff;
+  box-shadow:4px 4px 0 rgba(57,57,57,.16);
+  font-family:var(--font-pixel);
+  font-size:12px;
+  position:relative;z-index:5;
+  will-change:transform;
+}
+.widget__titlebar{
+  display:flex;justify-content:space-between;align-items:center;
+  background:linear-gradient(90deg,#000080,#1084d0);
+  color:#fff;padding:3px 4px 3px 7px;
+  font-size:12px;
+}
+.widget__btns{display:flex;gap:2px;}
+.widget__btns i{
+  display:block;width:16px;height:14px;line-height:12px;text-align:center;
+  background:var(--grey);color:#000;border:1px solid #fff;
+  font-style:normal;font-size:10px;
+}
+.widget__btns i.x{background:#c8c8c8;}
+.widget__body{padding:12px;background:#f4f4f4;}
+.path{
+  border:2px inset var(--grey);background:#fff;padding:4px 6px;
+  color:var(--slate);margin-bottom:10px;
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;}
+.btn90{
+  font-family:var(--font-pixel);font-size:12px;
+  padding:4px 14px;background:var(--grey);color:#000;
+  border:2px outset #fff;border-radius:0;cursor:default;
+}
+.btn90[disabled]{color:#909090;text-shadow:1px 1px 0 #fff;cursor:not-allowed;}
+.btn90--ghost{background:#eaeaea;}
+.progress{
+  height:17px;background:#fff;border:2px inset var(--grey);
+  margin-bottom:6px;position:relative;overflow:hidden;
+}
+.progress::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(0,0,0,.05) 0 2px,transparent 2px 4px);
+}
+.progress__bar{
+  height:100%;width:0;
+  background:repeating-linear-gradient(90deg,var(--ink) 0 8px,#565656 8px 10px);
+}
+.progress__label{color:var(--slate);line-height:1.9;font-size:12px;}
+.progress__label b{color:var(--red);}
+.widget__note{font-size:10px;line-height:1.6;margin-top:6px;color:#8a8a8a;}
+
+.formjunk{
+  width:344px;
+  margin:-16px 0 0 60%;
+  padding:14px;
+  border:1px dashed var(--fog);
+  background:#fafafa;
+  font-family:var(--font-pixel);
+  font-size:12px;
+  position:relative;z-index:4;
+  will-change:transform;
+}
+.formjunk__row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:7px;}
+.formjunk label{display:flex;align-items:center;gap:5px;}
+.formjunk select{
+  font-family:var(--font-pixel);font-size:11px;max-width:180px;
+  border:2px inset var(--grey);background:#fff;color:var(--slate);
+}
+.formjunk textarea{
+  width:100%;font-family:var(--font-pixel);font-size:11px;
+  border:2px inset var(--grey);background:#fff;color:var(--slate);
+  resize:none;margin-bottom:10px;padding:4px 6px;
+}
+
+/* ---------- 破碎图片占位 ---------- */
+.sec--media{min-height:660px;}
+.sec--widgets{padding-top:120px;min-height:560px;}
+.brokenimg{
+  position:absolute;
+  padding:16px;
+  text-align:center;
+  border:1px solid var(--grey);
+  background:
+    linear-gradient(135deg,rgba(57,57,57,.03) 25%,transparent 25%,transparent 50%,
+                    rgba(57,57,57,.03) 50%,rgba(57,57,57,.03) 75%,transparent 75%);
+  background-size:16px 16px;
+  will-change:transform;
+}
+.brokenimg__icon{display:block;font-size:34px;line-height:1;color:var(--fade);}
+.brokenimg__alt{display:block;margin-top:10px;color:var(--slate);}
+.brokenimg__cap{display:block;margin-top:4px;color:var(--label);}
+.brokenimg--a{width:252px;height:184px;left:2%;top:96px;}
+.brokenimg--b{width:302px;height:206px;right:2%;top:268px;}
+.brokenimg--c{width:204px;height:152px;left:42%;top:452px;}
+
+/* ---------- Lottie 占位 ---------- */
+.sec--lottie{padding-top:70px;overflow:visible;}
+.lottie{
+  position:relative;
+  width:min(660px,62vw);
+  min-height:300px;
+  margin:0 0 0 6%;
+  border:1px solid var(--ink);
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  background:
+    repeating-linear-gradient(90deg,rgba(57,57,57,.05) 0 1px,transparent 1px 40px),
+    repeating-linear-gradient(0deg,rgba(57,57,57,.05) 0 1px,transparent 1px 40px),
+    #fcfcfb;
+  will-change:transform;
+}
+.lottie__inner{text-align:center;padding:24px;}
+.lottie__label{
+  font-family:var(--font-display);
+  font-size:30px;font-weight:400;
+  letter-spacing:-.035em;text-transform:uppercase;
+  color:var(--ink);
+  line-height:1.1;
+}
+.lottie__sub{color:var(--label);margin-top:8px;}
+.lottie__dots{display:flex;gap:8px;justify-content:center;margin-top:20px;}
+.lottie__dots i{display:block;width:10px;height:10px;background:var(--ink);will-change:transform;}
+.lottie__dots i:nth-child(2){background:var(--red);}
+.lottie__dots i:nth-child(3){background:var(--fade);}
+
+/* ==========================================================================
+   9. 深色巨型标题带
+   ========================================================================== */
+.band{
+  margin:130px calc(-1 * var(--pad-r)) 0 calc(-1 * var(--pad-l));
+  background:var(--ink-2);
+  color:var(--paper);
+  padding:74px var(--pad-r) 96px var(--pad-l);
+  overflow:hidden;
+}
+.band__inner{max-width:1240px;}
+.band__t{
+  font-family:var(--font-display);
+  font-size:clamp(3rem,9.4vw,10.5rem);
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:-.05em;
+  line-height:.86;
+  white-space:nowrap;
+  will-change:transform;
+  transform-origin:0 80%;
+}
+.band__s{
+  font-family:var(--font-pixel);
+  font-size:clamp(20px,2.6vw,34px);
+  letter-spacing:.06em;
+  color:var(--red);
+  margin-top:22px;margin-left:16%;
+  will-change:transform;
+}
+.band__n{color:var(--fade);margin-top:52px;}
+
+/* ==========================================================================
+   10. 结尾
+   ========================================================================== */
+.sec--end{padding-top:120px;}
+.sec--end .label{margin-bottom:16px;}
+.links{margin:64px 0 72px;max-width:900px;}
+.links .lnk{
+  display:inline-block;
+  margin-right:38px;
+  font-size:var(--t-ui);
+  letter-spacing:var(--track);
+  text-transform:uppercase;
+  will-change:transform;
+}
+/* 老派链接状态：只换颜色，不做任何过渡动画 */
+.lnk,.lnk:link{color:var(--ink);text-decoration:underline;text-underline-offset:3px;}
+.lnk:visited,.lnk.is-visited{color:#6b4a8f;}
+.lnk:hover{text-decoration:none;}
+.lnk:active{color:var(--red);}
+.links .lnk:nth-child(2){margin-top:30px;}
+.links .lnk:nth-child(3){margin-top:-8px;margin-left:11%;}
+.links .lnk:nth-child(4){margin-top:46px;margin-left:5%;}
+
+.colophon{
+  color:var(--label);
+  max-width:620px;
+  border-top:1px solid var(--grey);
+  padding-top:16px;
+  line-height:2;
+}
+.colophon b{color:var(--ink);}
+.colophon>div:last-child{margin-top:14px;}
+
+/* ==========================================================================
+   11. 故障错位层
+   只用在「实色」元素上。background-clip:text 的元素不能再挂伪元素层 ——
+   父级的裁剪会把子元素的颜色、变换一起吃掉，动画会静默失效。
+   ========================================================================== */
+[data-glitch]{position:relative;}
+[data-glitch]::before,
+[data-glitch]::after{
+  content:attr(data-text);
+  position:absolute;left:0;top:0;width:100%;
+  pointer-events:none;
+  text-transform:uppercase;
+}
+[data-glitch]::before{
+  color:var(--red);
+  clip-path:inset(0 0 56% 0);
+  transform:translate(var(--gx,0),var(--gy,0));
+  opacity:.9;
+}
+[data-glitch]::after{
+  color:#ffffff;
+  clip-path:inset(56% 0 0 0);
+  transform:translate(calc(var(--gx,0px) * -1),calc(var(--gy,0px) * -1));
+  opacity:.55;
+}
+
+[data-clip]{clip-path:inset(0 0 0 0);}
+
+/* ==========================================================================
+   12. 移动端拦截
+   ========================================================================== */
+.warn-mobile{display:none;}
+
+body.is-mobile .doc,
+body.is-mobile .chrome,
+body.is-mobile .bar{display:none;}
+
+body.is-mobile .warn-mobile{
+  display:block;
+  min-height:100vh;
+  background:var(--ink-2);
+  color:var(--paper);
+  padding:16vh 26px 40px;
+}
+.warn-mobile__box{max-width:520px;}
+.warn-mobile__tag{
+  display:inline-block;
+  background:var(--red);
+  color:#fff;
+  padding:5px 9px;
+  margin-bottom:30px;
+}
+.warn-mobile__title{
+  font-family:var(--font-display);
+  font-size:clamp(38px,11vw,58px);
+  font-weight:400;
+  text-transform:uppercase;
+  letter-spacing:-.045em;
+  line-height:.9;
+  margin:0 0 30px;
+  transform:rotate(-1.2deg);
+}
+.warn-mobile p{color:var(--fade);margin:0 0 10px;}
+
+/* ==========================================================================
+   13. 窄桌面：收起左栏与中标签，内容重新贴左
+   不做移动端布局，但窄窗口仍需可用
+   ========================================================================== */
+@media (max-width:1180px){
+  /* 覆盖必须落在 :root 上 —— .gridlines 在 .chrome 里，不在 .doc 里，
+     改 .doc 的自定义属性它看不见，栅格就会和内容错开。 */
+  :root{--pad-l:44px;}
+  .rail{display:none;}
+  .hud--tc{display:none;}
+  .hero__l2{margin-left:10%;}
+  .formjunk{margin-left:auto;margin-right:0;}
+}
+@media (max-width:900px),(pointer:coarse){
+  body .doc,body .chrome,body .bar{display:none;}
+  body .warn-mobile{display:block;min-height:100vh;background:var(--ink-2);color:var(--paper);padding:16vh 26px 40px;}
+}

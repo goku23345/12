@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>UNBELIEVABLY CRAP — 一个已经坏掉但还在运行的网页</title>
+<meta name="viewport" content="width=1280">
+<meta name="description" content="粗野主义实验网页。滚动驱动视差、抖动、裁切与文本打散。最好用桌面浏览器打开。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ══ 质感层：CRT 扫描线 + 胶片颗粒（固定，不吃指针） ══ -->
+<div class="scan" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ══ 固定边框：精密的部分。所有破碎都发生在这层之外 ══ -->
+<div class="chrome" aria-hidden="true">
+  <div class="gridlines"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+  <div class="hud hud--tl">
+    <span>Unbelievably Crap</span>
+    <span class="dim">Brutalist web experiment / v0.0.1</span>
+  </div>
+
+  <div class="hud hud--tc">Case file: the page that broke</div>
+
+  <div class="hud hud--tr">
+    <span>Scroll Y <b id="js-y2">0</b></span>
+    <span class="dim">Wheel <b id="js-wheel2">0</b></span>
+  </div>
+
+  <div class="rail">
+    <div class="rail__row"><i class="mk"></i><span>本站已损坏</span></div>
+    <div class="rail__row"><i class="mk"></i><span>不要修复它</span></div>
+    <div class="rail__row dim"><i class="mk"></i><span>建议分辨率 800×600</span></div>
+    <div class="rail__row dim"><i class="mk"></i><span>0 个前端框架</span></div>
+  </div>
+</div>
+
+<main class="doc" id="doc">
+
+  <!-- ══════════ HERO ══════════ -->
+  <header class="hero">
+    <div class="hero__meta label">
+      <i class="mk mk--red"></i>
+      <span>01 / 一个坏掉的首页</span>
+    </div>
+
+    <h1 class="display hero__l1" data-anim="plx zoom" data-speed="-0.18" data-amp="180" data-zoom="-0.24" data-ls="-10">Unbelievably</h1>
+    <h1 class="display hero__l2" data-anim="plx zoom" data-speed="0.1" data-amp="240" data-zoom="0.3" data-ls="8">Crap</h1>
+
+    <div class="hero__foot">
+      <p class="lead hero__lede">
+        一个已经坏掉、但仍在运行的网页。<br>
+        <span class="dim">把所有礼貌都删掉之后，剩下的那个东西。</span>
+      </p>
+      <div class="hero__hint label">
+        ↓ 滚动 · 唯一的交互方式 · scrollY = <b id="js-y">0</b>px
+      </div>
+    </div>
+
+    <!-- 装饰：高饱和小色块，全站唯一的红 -->
+    <i class="blk blk--a" data-anim="plx rot jit" data-speed="0.9" data-amp="420" data-jit="16" data-rot="40" data-jump="24"></i>
+    <i class="blk blk--b" data-anim="plx jit" data-speed="-0.8" data-amp="380" data-jit="12"></i>
+    <i class="blk blk--c" data-anim="plx rot jit" data-speed="0.55" data-amp="300" data-jit="9" data-rot="-22" data-jump="14"></i>
+  </header>
+
+  <!-- ══════════ 滚动驱动跑马灯 ══════════ -->
+  <div class="marq" data-anim="marq" data-marq-speed="1.2">
+    <div class="marq__track">
+      <span>本站使用 0 个前端框架 ★ 全站动画由 window.scrollY 直接驱动 ★ 请勿期望平滑缓动 ★ 所有元素的位置都是刻意的错误 ★ 若页面看起来没坏，请继续向下滚动 ★ 本页在三台显示器上看起来都不一样 ★&nbsp;</span>
+      <span>本站使用 0 个前端框架 ★ 全站动画由 window.scrollY 直接驱动 ★ 请勿期望平滑缓动 ★ 所有元素的位置都是刻意的错误 ★ 若页面看起来没坏，请继续向下滚动 ★ 本页在三台显示器上看起来都不一样 ★&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ══════════ §00 序 ══════════ -->
+  <section class="sec">
+    <div class="shead">
+      <span class="shead__no">00</span>
+      <span class="shead__tt">序 / Preface</span>
+      <i class="mk mk--red"></i>
+    </div>
+
+    <p class="sub al-l w-lg" data-anim="plx clip fade" data-speed="-0.06" data-amp="70" data-clip="11" data-clip-dir="bottom">
+      这个网站是坏的。
+    </p>
+    <p class="body al-l w-md indent" data-anim="plx clip fade jit" data-speed="0.05" data-amp="90" data-jit="4" data-clip="7" data-clip-dir="bottom">
+      这不是意外，这是它唯一诚实的部分。
+    </p>
+
+    <hr class="hr hr--red">
+
+    <p class="body al-c w-md off-r" data-anim="plx fade" data-speed="-0.14" data-amp="120">
+      我们花了二十年，把网页擦干净。圆角、投影、留白、缓动曲线、按下时有微妙回弹的按钮、在加载时转一圈的骨架屏。网页慢慢变成了一间永远刚打扫过的样板房：没有一根头发，没有一粒灰，也没有人真的住在里面。
+    </p>
+
+    <p class="lead al-r w-sm off-l" data-anim="plx fade jit" data-speed="0.2" data-amp="150" data-jit="5">
+      而这里是那间房子的背面。
+    </p>
+
+    <p class="body al-l w-lg off-r-2" data-anim="plx clip fade" data-speed="-0.08" data-amp="110" data-clip="9" data-clip-dir="top">
+      墙皮剥落，电线裸露，有一盏灯永远在闪。文字不知道该站在哪里，于是它站在了别的地方。图片加载不出来，于是它非常诚实地展示了自己的失败。
+    </p>
+
+    <p class="body al-c w-md off-l-2" data-anim="plx fade" data-speed="0.11" data-amp="130">
+      滚动往下。别期待什么。没有平滑过渡，没有精心编排的入场动画——只有一堆数字在每一帧里被粗暴地加减，然后元素跳一下。
+    </p>
+
+    <p class="label al-r w-xs off-r-3" data-anim="plx fade jit" data-speed="-0.24" data-amp="170" data-jit="6">
+      （这一切都是可控的。程度刚好卡在“还能读”和“想放弃”之间。）
+    </p>
+  </section>
+
+  <!-- ══════════ §01 控件 ══════════ -->
+  <section class="sec sec--widgets">
+    <div class="shead">
+      <span class="shead__no">01</span>
+      <span class="shead__tt">控件 / Controls</span>
+      <i class="mk mk--red"></i>
+    </div>
+
+    <div class="widget" data-anim="plx rot fade jit" data-speed="-0.32" data-amp="220" data-rot="-1.6" data-jump="1.2" data-jit="6">
+      <div class="widget__titlebar">
+        <span>上传文件 [2] — 未命名窗口</span>
+        <span class="widget__btns"><i>_</i><i>□</i><i class="x">×</i></span>
+      </div>
+      <div class="widget__body">
+        <div class="path">C:\我的文档\最终版\真的最终版\这个文件不存在.psd</div>
+        <div class="row">
+          <button class="btn90" type="button">浏览…</button>
+          <button class="btn90" type="button" disabled>上传</button>
+          <button class="btn90 btn90--ghost" type="button" disabled>取消</button>
+        </div>
+        <div class="progress"><div class="progress__bar" id="js-meter"></div></div>
+        <div class="progress__label">
+          正在上传 <b id="js-pct">0%</b> · 剩余时间 <b>计算中…</b> · 已用时间 <b>永不结束</b>
+        </div>
+        <div class="widget__note">（这条进度条的数值其实是滚动位置。它永远不会到 100%。）</div>
+      </div>
+    </div>
+
+    <div class="formjunk" data-anim="plx rot fade jit" data-speed="0.3" data-amp="200" data-rot="1.4" data-jump="1.8" data-jit="5">
+      <div class="formjunk__row">
+        <label>收件人：</label>
+        <select disabled><option>（无可用收件人）</option></select>
+      </div>
+      <div class="formjunk__row"><label><input type="checkbox" checked disabled> 我已阅读并同意《用户协议》</label></div>
+      <div class="formjunk__row dim"><label><input type="checkbox" disabled> 我不同意</label><span>（该选项已被移除，但留下了位置）</span></div>
+      <div class="formjunk__row"><label><input type="radio" name="why" disabled> 选项 A</label><span class="dim">（唯一的一项）</span></div>
+      <textarea readonly rows="3">这里写不下。</textarea>
+      <div class="row">
+        <button class="btn90" type="button" disabled>提交</button>
+        <button class="btn90" type="button" disabled>提交</button>
+        <button class="btn90" type="button" disabled>提交</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ §02 规整 ══════════ -->
+  <section class="sec">
+    <div class="shead">
+      <span class="shead__no">02</span>
+      <span class="shead__tt">规整 / Grid</span>
+      <i class="mk mk--red"></i>
+    </div>
+
+    <p class="sub al-l w-lg" data-anim="plx clip fade" data-speed="-0.1" data-amp="90" data-clip="13" data-clip-dir="bottom">网格是一个谎言，</p>
+    <p class="sub al-l w-lg off-1" data-anim="plx clip fade" data-speed="0.06" data-amp="120" data-clip="13" data-clip-dir="top">对齐是一种礼貌，</p>
+    <p class="sub sub--red al-r w-lg off-2" data-anim="plx zoom clip fade" data-speed="-0.18" data-amp="140" data-zoom="0.14" data-ls="5" data-clip="9" data-clip-dir="bottom">而我们今天不礼貌。</p>
+
+    <hr class="hr hr--thin off-1">
+
+    <div class="scatterbox" data-anim="fade">
+      <p class="body scatter" data-anim="scatter clip fade jit" data-scatter="30" data-jit="6" data-clip="6" data-clip-dir="bottom">
+        那些被精心计算过的八像素间距，那些被反复推敲过五遍的字重与行高，那些在三种设备、六种亮度下都被验证过的对比度——它们很好。太好的东西让人不敢碰，也不敢改，最后只能被供起来，像一具保养得当的标本。
+      </p>
+    </div>
+
+    <p class="body al-c w-md off-r" data-anim="plx fade" data-speed="0.16" data-amp="140">
+      于是我把间距调成随机的，把基线推下去两个像素，让标题压在正文身上，让某一段多出来一点点，刚好超出它所在的那一栏。不是为了难看，是为了让这套系统重新有一点点体温。
+    </p>
+
+    <div class="scatterbox scatterbox--r" data-anim="fade">
+      <p class="lead scatter al-r" data-anim="scatter fade jit" data-scatter="24" data-jit="8">
+        规整不会出错，但也从不惊喜。裂缝会漏风，可光也是从裂缝里进来的。所以我把这一页做成了一道裂缝。
+      </p>
+    </div>
+  </section>
+
+  <!-- ══════════ 破碎图片占位 ══════════ -->
+  <section class="sec sec--media">
+    <div class="shead">
+      <span class="shead__no">—</span>
+      <span class="shead__tt">素材 / Assets</span>
+      <i class="mk"></i>
+    </div>
+
+    <div class="brokenimg brokenimg--a" data-anim="plx rot fade jit" data-speed="-0.5" data-amp="240" data-rot="-3" data-jump="2.4" data-jit="7">
+      <span class="brokenimg__icon">▨</span>
+      <span class="brokenimg__alt label">[ 图片加载失败 ]</span>
+      <span class="brokenimg__cap label">hero_final_v3.png · 404</span>
+    </div>
+    <div class="brokenimg brokenimg--b" data-anim="plx rot fade jit" data-speed="0.58" data-amp="270" data-rot="2.4" data-jump="2.8" data-jit="6">
+      <span class="brokenimg__icon">▧</span>
+      <span class="brokenimg__alt label">[ 图片加载失败 ]</span>
+      <span class="brokenimg__cap label">DSC_0042.JPG · 权限不足</span>
+    </div>
+    <div class="brokenimg brokenimg--c" data-anim="plx rot fade jit" data-speed="-0.66" data-amp="300" data-rot="5" data-jump="3.2" data-jit="9">
+      <span class="brokenimg__icon">▩</span>
+      <span class="brokenimg__alt label">[ 图片加载失败 ]</span>
+      <span class="brokenimg__cap label">共 187 张同款未命名图片</span>
+    </div>
+  </section>
+
+  <!-- ══════════ Lottie 占位 ══════════ -->
+  <section class="sec sec--lottie">
+    <div class="lottie" data-anim="plx rot fade jit" data-speed="-0.38" data-amp="230" data-rot="1.8" data-jump="2" data-jit="8">
+      <div class="lottie__inner">
+        <div class="lottie__label">Lottie 动画占位容器</div>
+        <div class="lottie__sub label">/assets/hero-animation.json → 404 Not Found</div>
+        <div class="lottie__sub label">预期帧率 24fps · 实际帧率取决于你的滚轮</div>
+        <div class="lottie__dots">
+          <i data-anim="jit" data-jit="4"></i><i data-anim="jit" data-jit="6"></i><i data-anim="jit" data-jit="3"></i>
+        </div>
+      </div>
+    </div>
+    <p class="label w-xs off-r dim" data-anim="plx fade jit" data-speed="0.5" data-amp="190" data-jit="5">
+      这里本来应该有一段丝滑的矢量动画。它没有到货。我们先放了一个框。
+    </p>
+  </section>
+
+  <!-- ══════════ 深色巨型标题带 ══════════ -->
+  <section class="band">
+    <div class="band__inner">
+      <div class="band__t" data-anim="plx zoom glitch fade" data-speed="-0.16" data-amp="170" data-zoom="-0.44" data-ls="-22"
+           data-glitch="1" data-text="Still loading…">Still loading…</div>
+      <div class="band__s" data-anim="plx zoom rot fade jit" data-speed="0.26" data-amp="210" data-zoom="0.3" data-ls="8"
+           data-rot="-1.2" data-jump="1.6" data-jit="6">仍然是坏的</div>
+      <div class="band__n label">加载了 27 年 &nbsp;·&nbsp; 请稍候 &nbsp;·&nbsp; 请勿关闭窗口</div>
+    </div>
+  </section>
+
+  <!-- ══════════ §03 卡顿 ══════════ -->
+  <section class="sec">
+    <div class="shead">
+      <span class="shead__no">03</span>
+      <span class="shead__tt">卡顿 / Jank</span>
+      <i class="mk mk--red"></i>
+    </div>
+
+    <p class="sub al-r w-lg off-l" data-anim="plx clip zoom fade" data-speed="-0.12" data-amp="100" data-zoom="0.12" data-clip="11" data-clip-dir="bottom">卡顿是一种修辞。</p>
+
+    <p class="body al-l w-lg off-r" data-anim="plx fade" data-speed="0.07" data-amp="120">
+      六十帧的顺滑是给人看的，但真正被记住的是那些断掉的地方——跳到一半卡住的贴纸，转场里出现半秒的绿屏，光盘划伤之后播放器反复读同一段。这些瑕疵不是产品缺陷，是这具身体的心跳。
+    </p>
+
+    <div class="scatterbox" data-anim="fade">
+      <p class="body scatter al-c" data-anim="scatter clip fade jit" data-scatter="34" data-jit="7" data-clip="8" data-clip-dir="bottom">
+        所以我把缓动曲线全部删掉了，只留下四舍五入。把每一帧的数字都截断到最近的整数，让位移一格一格地跳过去，像一台过热的、齿轮磨平了的机器。
+      </p>
+    </div>
+
+    <p class="lead al-l w-sm off-l-2" data-anim="plx fade jit rot" data-speed="-0.3" data-amp="190" data-jit="8" data-rot="1" data-jump="1.4">
+      它不优雅。它不想优雅。
+    </p>
+
+    <p class="label al-r w-sm off-r-2 dim" data-anim="plx fade" data-speed="0.22" data-amp="160">
+      （本段文字会在滚动时被逐字打散。字符偏移量来自一个确定性噪声函数，因此每次滚到同一个位置，它们都会落在同一个错误的地方。）
+    </p>
+  </section>
+
+  <!-- ══════════ 结尾 ══════════ -->
+  <section class="sec sec--end">
+    <div class="shead">
+      <span class="shead__no">04</span>
+      <span class="shead__tt">结尾 / End</span>
+      <i class="mk mk--red"></i>
+    </div>
+
+    <p class="sub sub--lg" data-anim="plx zoom fade" data-speed="-0.5" data-amp="200" data-zoom="-0.22" data-ls="-6">
+      谢谢你滚到这里。
+    </p>
+    <p class="label dim" data-anim="plx fade jit" data-speed="-0.2" data-amp="150" data-jit="5">
+      你可以关掉这个页面了。它不会挽留你，也不会问你为什么走。
+    </p>
+
+    <div class="links">
+      <a href="#" class="lnk" data-anim="plx fade jit" data-speed="-0.8" data-amp="280" data-jit="10">← 返回上一页（不存在）</a>
+      <a href="#" class="lnk is-visited" data-anim="plx fade jit" data-speed="0.7" data-amp="320" data-jit="8">留言簿 · 已有 1 条留言</a>
+      <a href="#" class="lnk" data-anim="plx fade jit" data-speed="-0.55" data-amp="250" data-jit="11">站点地图（空文件）</a>
+      <a href="#" class="lnk is-visited" data-anim="plx fade jit" data-speed="0.9" data-amp="360" data-jit="9">友情链接 · 对方已关站</a>
+    </div>
+
+    <div class="colophon label">
+      <div>您是第 <b id="js-hits">000133</b> 位访客 &nbsp;·&nbsp; 计数器于 1999 年停止更新</div>
+      <div>最后更新：昨天 &nbsp;·&nbsp; 下次更新：不会有了</div>
+      <div>本站由一台仍在运行的旧电脑维护 &nbsp;·&nbsp; 请不要给它断电</div>
+      <div class="dim">© 1998 – 2026 无人在乎 &nbsp;·&nbsp; 本站不收集任何数据，因为它已经坏到收集不了了</div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ══ 固定底栏 ══ -->
+<div class="bar">
+  <div class="bar__left">
+    <a href="#" class="bar__btn"><i class="mk mk--red"></i>Index</a>
+    <a href="#" class="bar__btn"><i class="mk"></i>Manifesto</a>
+    <a href="#" class="bar__btn"><i class="mk"></i>Contact</a>
+  </div>
+  <div class="bar__prog"><i id="js-thumb"></i></div>
+  <div class="bar__right">
+    <span class="bar__coord">X <b id="js-cx">0000</b> / Y <b id="js-cy">000000</b></span>
+    <i class="mk mk--red"></i>
+    <span class="bar__clock" id="js-clock">--:--:--</span>
+    <span class="bar__pct"><b id="js-pct2">0%</b></span>
+    <span class="dim">Wheel <b id="js-wheel">0</b></span>
+  </div>
+</div>
+
+<!-- ══ 移动端拦截 ══ -->
+<div class="warn-mobile">
+  <div class="warn-mobile__box">
+    <div class="label warn-mobile__tag">Error 800 × 600</div>
+    <h2 class="warn-mobile__title">Best<br>viewed with<br>a desktop</h2>
+    <p class="label">本网站未提供移动端布局。这不是疏忽，是拒绝。</p>
+    <p class="label">请换一台有鼠标滚轮的电脑。谢谢。</p>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
